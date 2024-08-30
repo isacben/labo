@@ -1,0 +1,75 @@
+{{ template "header" }}
+
+    <body class="">
+        {{ template "navbar" }}
+        <div class="container-fluid">
+            <h1>Financial Reports</h1>
+
+            <div class="my-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Create Financial Report</h6>
+                        <form class="row g-3" hx-target="#this-target" hx-swap="afterbegin transition:true" hx-post="/createFinancialReport" hx-indicator="#spinner">
+                            <div class="col-md-2">
+                                <label for="from_created_at" class="form-label">From</label>
+                                <input name="from_created_at" class="form-control" placeholder="from_created_at" aria-label="from_created_at" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="to_created_at" class="form-label">To</label>
+                                <input name="to_created_at" type="text" class="form-control" placeholder="to_created_at" aria-label="to_created_at" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="type" class="form-label">Type</label>
+                                <input name="type" type="text" class="form-control" placeholder="type" aria-label="type" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="file_format" class="form-label">File Format</label>
+                                <input name="file_format" type="text" class="form-control" placeholder="file_format" aria-label="file_format" required>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    Create
+                                </button>
+                                <span id="spinner" class="htmx-indicator p-1 align-middle" style="background-color: rgb(167, 119, 193); color: white; border-radius: 2px;"><small>Loading...</small></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="response-table" class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>id</td>
+                            <th>type</td>
+                            <th>file_name</td>
+                            <th>file_format</td>
+                            <th>status</td>
+                            <th>report_expires_at</td>
+                        </tr>
+                    </thead>
+                    <tbody id="this-target">
+                        {{block "report-table" .}}
+                        {{ range .Items }} 
+                        <tr class="text-nowrap" >
+                            <td><a href="/downloadFinancialReport?id={{.Id}}&file_format={{.FileFormat}}&file_name={{.FileName}}">{{.Id}}</a></td>
+                            <td>{{.Type}}</td>
+                            <td>{{.FileName}}</td>
+                            <td>{{.FileFormat}}</td>
+                            <td>{{.Status}}</td>
+                            <td>{{.ReportExpiresAt}}</td>
+                        </tr>
+                        {{ end }} 
+                    </tbody>
+                </table>
+            </div>
+
+            {{if not .Items}}
+                <p>There's nothing here.</p>
+            {{end}}
+            {{end}}
+            </div>
+        </div>
+    </body>
+</html>    

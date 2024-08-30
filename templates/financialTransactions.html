@@ -1,0 +1,95 @@
+{{ template "header" }}
+
+    <body class="">
+        {{ template "navbar" }}
+        <div class="container-fluid">
+            <h1>Financial Transactions</h1>
+
+            <div class="my-4">
+                <div class="card">
+                    <div class="card-body">
+                        <form class="row g-3" hx-target="#response-table" hx-post="/getFinancialTransactions" hx-indicator="#spinner">
+                            <div class="col-md-2">
+                                <label for="from_created_at" class="form-label">From</label>
+                                <input name="from_created_at" class="form-control" placeholder="from_created_at" aria-label="from_created_at">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="to_created_at" class="form-label">To</label>
+                                <input name="to_created_at" type="text" class="form-control" placeholder="to_created_at" aria-label="to_created_at">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    Send
+                                </button>
+                                <span id="spinner" class="htmx-indicator p-1 align-middle" style="background-color: rgb(167, 119, 193); color: white; border-radius: 2px;"><small>Loading...</small></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {{block "error-msg" .}}
+                <div>{{.Code}}</div>
+                {{end}}
+            </div>
+            
+            <div id="response-table" class="table-responsive">
+                {{block "report-table" .}}
+                    {{if .Items}}
+                    <table class="table table-striped">
+                        <thead> 
+                            <tr>
+                                <th>id</td>
+                                <th>batch_id</td>
+                                <th>source_id</td>
+                                <th>funding_source_id</td>
+                                <th>source_type</td>
+                                <th>transaction_type</td>
+                                <th>currency</td>
+                                <th>amount</td>
+                                <th>client_rate</td>
+                                <th>currency_pair</td>
+                                <th>net</td>
+                                <th>fee</td>
+                                <th>estimated_settled_at</td>
+                                <th>settled_at</td>
+                                <th>description</td>
+                                <th>status</td>
+                                <th>created_at</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{ range .Items }} 
+                            <tr class="text-nowrap">
+                                <td>{{.Id}}</td>
+                                <td>{{.BatchId}}</td>
+                                <td>{{.SourceId}}</td>
+                                <td>{{.FundingSourceId}}</td>
+                                <td>{{.SourceType}}</td>
+                                <td>{{.TransactionType}}</td>
+                                <td>{{.Currency}}</td>
+                                <td>{{.Amount}}</td>
+                                <td>{{.ClientRate}}</td>
+                                <td>{{.CurrencyPair}}</td>
+                                <td>{{.Net}}</td>
+                                <td>{{.Fee}}</td>
+                                <td>{{.EstimatedSettledAt}}</td>
+                                <td>{{.SettledAt}}</td>
+                                <td>{{.Description}}</td>
+                                <td>{{.Status}}</td>
+                                <td>{{.CreatedAt}}</td>
+                            </tr>
+                            {{ end }} 
+                        </tbody>
+                    </table>
+                    {{else}}
+                        <p>There's nothing here.</p>
+                    {{end}}
+
+                    
+                    {{if .code }}
+                        <p>{{ .Code }}</p>
+                    {{end}}
+                {{end}}
+            </div>
+        </div>
+    </body>
+</html>    
