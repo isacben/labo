@@ -27,7 +27,11 @@
                     </div>
                 </div>
                 {{block "error-msg" .}}
-                <div>{{.Code}}</div>
+                {{ if . }}
+                    <div class="alert alert-danger" role="alert">
+                        <span>{{ . }}</span>
+                    </div>
+                {{end}}
                 {{end}}
             </div>
             

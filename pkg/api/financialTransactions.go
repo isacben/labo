@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"text/template"
@@ -26,31 +27,38 @@ func GetFinancialTransactions(w http.ResponseWriter, r *http.Request) {
 
 	var report Report
 
-	financialTransactions, err := financialTransactions(from, to)
+	awxRes, err := financialTransactions(from, to)
 	if err != nil {
 		fmt.Printf("error: could not get financial transactions: %s\n", err)
-	}
-
-	jerr := json.Unmarshal(financialTransactions, &report)
-	if jerr != nil {
-		fmt.Printf("error: financial transactions: %s\n", jerr)
 	}
 
 	t, _ := template.ParseFiles(
 		"templates/header.html",
 		"templates/financialTransactions.html",
 	)
+
+	if awxRes.StatusCode != 200 {
+		msg := fmt.Sprintf("Error: HTTP %v: %s", awxRes.StatusCode, string(awxRes.Body))
+		log.Println(msg)
+		t.ExecuteTemplate(w, "error-msg", msg)
+	}
+
+	jerr := json.Unmarshal(awxRes.Body, &report)
+	if jerr != nil {
+		fmt.Printf("error: financial transactions: %s\n", jerr)
+	}
+
 	t.ExecuteTemplate(w, "report-table", report)
 
-	fmt.Printf("financialTransactions: %s", string(financialTransactions))
+	//fmt.Printf("financialTransactions: %s", string(financialTransactions))
 }
 
 // request to Airwallex
 
-func financialTransactions(from string, to string) ([]byte, error) {
+func financialTransactions(from string, to string) (AwxResponse, error) {
 	token, err := getToken()
 	if err != nil {
-		return nil, fmt.Errorf("authentication error: %s", err)
+		return AwxResponse{}, fmt.Errorf("authentication error: %s", err)
 	}
 
 	openId := os.Getenv("openId")
@@ -61,10 +69,10 @@ func financialTransactions(from string, to string) ([]byte, error) {
 	}
 
 	url := fmt.Sprintf("/api/v1/financial_transactions?from_created_at=%s&to_created_at=%s", from, to)
-	resBody, err := sendRequest("GET", url, nil, header)
+	awxRes, err := sendRequest("GET", url, nil, header)
 	if err != nil {
 		fmt.Printf("connector: %v\n", err)
 	}
 
-	return resBody, nil
+	return awxRes, nil
 }

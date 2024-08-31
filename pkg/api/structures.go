@@ -45,8 +45,8 @@ type FinancialReport struct {
 
 // General
 
-type Error struct {
-	Code    string `json:"code"`
-	Source  string `json:"source"`
-	Message string `json:"message"`
+type AwxResponse struct {
+	Body       []byte
+	Header     map[string][]string
+	StatusCode int
 }
