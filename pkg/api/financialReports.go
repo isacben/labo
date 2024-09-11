@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"text/template"
 )
 
@@ -177,10 +178,12 @@ func getListOfFinancialReports(pageSize int64) ([]byte, error) {
 		return nil, fmt.Errorf("http error: could not create request: %s", err)
 	}
 
+	openId := os.Getenv("openId")
 	authHeader := fmt.Sprintf("Bearer %s", token)
 	req.Header = http.Header{
-		"Content-Type":  {"application/json"},
-		"Authorization": {authHeader},
+		"Content-Type":   {"application/json"},
+		"Authorization":  {authHeader},
+		"x-on-behalf-of": {openId},
 	}
 
 	res, err := http.DefaultClient.Do(req)

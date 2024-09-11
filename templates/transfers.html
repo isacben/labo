@@ -1,0 +1,127 @@
+{{ template "header" }}
+
+    <body class="">
+        <script src="https://static.airwallex.com/components/sdk/v1/index.js"></script>
+
+        {{ template "navbar" }}
+        <div class="container-fluid">
+            <h1>Transfers</h1>
+
+            <div class="my-4">
+                <div class="card">
+                    <div class="card-body">
+                        <form class="row g-3" hx-target="#response-table" hx-post="/getTransfers" hx-indicator="#spinner">
+                            <div class="col-md-2">
+                                <label class="form-label">
+                                    From
+                                    <input name="from_created_at" class="form-control mt-2" placeholder="from_created_at" aria-label="from_created_at">
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">To
+                                    <input name="to_created_at" type="text" class="form-control mt-2" placeholder="to_created_at" aria-label="to_created_at">
+                                </label>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    Send
+                                </button>
+                                <span id="spinner" class="htmx-indicator p-1 align-middle" style="background-color: rgb(167, 119, 193); color: white; border-radius: 2px;"><small>Loading...</small></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {{block "error-msg" .}}
+                {{ if . }}
+                    <div class="alert alert-danger" role="alert">
+                        <span>{{ . }}</span>
+                    </div>
+                {{end}}
+                {{end}}
+                    
+                <div id="sca-container" style="display: block">
+                    <div id="component"></div>
+                </div>
+
+                {{block "sca-component" .}}
+                {{ if . }}
+
+                    <script>
+                        // example: https://github.com/airwallex/airwallex-payment-demo/blob/master/integrations/cdn(components-sdk)/dropin.html
+
+                        (async () => {
+                            try {
+                                const options = {
+                                    env: 'demo',
+                                    authCode: "{{ .AuthorizationCode }}",
+                                    clientId: "{{ .ClientId }}",
+                                    codeVerifier: "{{ .CodeVerifier }}",
+                                    origin: window.location.origin,
+                                } 
+                                const { sca } = await window.AirwallexComponentsSDK.init(options);
+
+                                const component = await sca.createElement('scaVerify', {
+                                    userEmail: '{{ .Email }}',
+                                });
+                            
+                                const domElement = component.mount('component'); 
+
+                                component.on('ready', (event) => {
+                                    document.getElementById('sca-container').style.display = 'block';
+                                    console.log('Element is ready', event.detail);
+                                });
+
+                                component.on('error', (event) => {
+                                    const { error } = event.detail;
+                                    console.error('error: SCA Component error:', error);
+                                });
+                            } catch (error) {
+                                console.error("There was an error:", error)
+                            }
+                        })();
+                    </script>
+                {{end}}
+                {{end}}
+
+            </div>
+            
+            <div id="response-table" class="table-responsive">
+                {{block "report-table" .}}
+                    {{if .Items}}
+                    <table class="table table-striped">
+                        <thead> 
+                            <tr>
+                                <th>id</td>
+                                <th>amount</td>
+                                <th>currency</td>
+                                <th>fee</td>
+                                <th>created_at</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{ range .Items }} 
+                            <tr class="text-nowrap">
+                                <td>{{.Id}}</td>
+                                <td>{{.Amount}}</td>
+                                <td>{{.Currency}}</td>
+                                <td>{{.Fee}}</td>
+                                <td>{{.CreatedAt}}</td>
+                            </tr>
+                            {{ end }} 
+                        </tbody>
+                    </table>
+                    {{else}}
+                        <p>There's nothing here.</p>
+                    {{end}}
+
+                    
+                    {{if .code }}
+                        <p>{{ .Code }}</p>
+                    {{end}}
+                {{end}}
+            </div>
+        </div>
+
+    </body>
+
+</html>    

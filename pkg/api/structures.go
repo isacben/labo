@@ -1,5 +1,7 @@
 package api
 
+import "net/http"
+
 // Financial transactions
 
 type Items struct {
@@ -43,10 +45,23 @@ type FinancialReport struct {
 	Items   []FinancialReportItems `json:"items"`
 }
 
+type TransfersItems struct {
+	Id        string `json:"id"`
+	Amount    int    `json:"amount"`
+	Currency  string `json:"currency"`
+	Fee       int    `json:"fee"`
+	CreatedAt string `json:"created_at"`
+}
+
+type Transfers struct {
+	HasMore bool             `json:"has_more"`
+	Items   []TransfersItems `json:"items"`
+}
+
 // General
 
 type AwxResponse struct {
 	Body       []byte
-	Header     map[string][]string
+	Header     http.Header
 	StatusCode int
 }
