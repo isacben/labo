@@ -39,7 +39,7 @@
                 {{end}}
                 {{end}}
                     
-                <div id="sca-container" style="display: block">
+                <div id="sca-container" style="display: none">
                     <div id="component"></div>
                 </div>
 
@@ -60,15 +60,15 @@
                                 } 
                                 const { sca } = await window.AirwallexComponentsSDK.init(options);
 
-                                const component = await sca.createElement('scaVerify', {
+                                const component = await window.AirwallexComponentsSDK.createElement('scaVerify', {
                                     userEmail: '{{ .Email }}',
                                 });
                             
                                 const domElement = component.mount('component'); 
 
-                                component.on('ready', (event) => {
+                                component.on('ready', () => {
                                     document.getElementById('sca-container').style.display = 'block';
-                                    console.log('Element is ready', event.detail);
+                                    console.log('Element is ready.');
                                 });
 
                                 component.on('error', (event) => {
