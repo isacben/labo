@@ -22,7 +22,7 @@
                                 </label>
                             </div>
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary me-2">
+                                <button id="submit-button" type="submit" class="btn btn-primary me-2">
                                     Send
                                 </button>
                                 <span id="spinner" class="htmx-indicator p-1 align-middle" style="background-color: rgb(167, 119, 193); color: white; border-radius: 2px;"><small>Loading...</small></span>
@@ -37,9 +37,13 @@
                     </div>
                 {{end}}
                 {{end}}
+
+		<div id="loading" class="my-4" style="display:none">
+			<span id="" class="p-1 align-middle" style="background-color: rgb(167, 119, 193); color: white; border-radius: 2px;"><small>Loading...</small></span>
+		</div>
                     
-                <div id="sca-container" style="display: none">
-                    <div id="component"></div>
+                <div id="sca-container" class="card mt-4 w-50 h-25" style="display: none">
+                    <div id="component"class="card-body"></div>
                 </div>
 
                 {{block "sca-component" .}}
@@ -49,6 +53,8 @@
                         // example: https://github.com/airwallex/airwallex-payment-demo/blob/master/integrations/cdn(components-sdk)/dropin.html
 
                         (async () => {
+			    document.getElementById('loading').style.display = 'block';
+			    document.getElementById('submit-button').disabled = true;
                             try {
                                 const options = {
                                     env: 'demo',
@@ -61,14 +67,41 @@
 
                                 const component = await window.AirwallexComponentsSDK.createElement('scaVerify', {
                                     userEmail: '{{ .Email }}',
+                                    scaSessionCode: '{{ .SessionCode }}'
                                 });
                             
                                 const domElement = component.mount('component'); 
 
                                 component.on('ready', () => {
-                                    document.getElementById('sca-container').style.display = 'block';
+				    document.getElementById('sca-container').style.display = 'block';
+				    document.getElementById('loading').style.display = 'none';
                                     console.log('Element is ready.');
                                 });
+
+				component.on('scaSetupSucceed', () => {
+				    document.getElementById('submit-button').disabled = false;
+				});
+
+			        component.on('verificationSucceed', ({token}) => {
+				    document.getElementById('sca-container').style.display = 'none';
+				    document.getElementById('submit-button').disabled = false;
+				    console.log("sca-token:", token); 
+				    var iframes = document.querySelectorAll('iframe');
+				    for (var i = 0; i < iframes.length; i++) {
+					    iframes[i].parentNode.removeChild(iframes[i]);
+	 			    }
+				});
+
+				component.on('cancel', () => {
+				    console.log("Canceling SCA verification...")
+				    document.getElementById('sca-container').style.display = 'none';
+				    document.getElementById('submit-button').disabled = false;
+
+				    var iframes = document.querySelectorAll('iframe');
+				    for (var i = 0; i < iframes.length; i++) {
+					    iframes[i].parentNode.removeChild(iframes[i]);
+	 			    }
+				});
 
                                 component.on('error', (event) => {
                                     const { error } = event.detail;

@@ -41,6 +41,7 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 	if awxRes.StatusCode != 200 {
 		msg := fmt.Sprintf("Error: HTTP %v: %s", awxRes.StatusCode, string(awxRes.Body))
 		log.Println(msg)
+		log.Println(awxRes.Header)
 		t.ExecuteTemplate(w, "error-msg", msg)
 	}
 
@@ -52,9 +53,6 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 		}
 
 		codeChallange := codeVerifier.CodeChallengeS256()
-		log.Printf("{'codeVerifier': '%v'}", codeVerifier.Value)
-		log.Printf("{'codeChallange': '%v'}", codeChallange)
-
 		awxScaRes, err := authorize(codeChallange)
 
 		if err != nil {
@@ -79,11 +77,13 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 			AuthorizationCode string
 			ClientId          string
 			Email             string
+			SessionCode       string
 		}{
 			codeVerifier.Value,
 			awxAuthRes.AuthorizationCode,
 			os.Getenv("clientId"),
-			"test@airwallex.com",
+			"test1231@airwallex.com",
+			awxRes.Header.Get("X-Sca-Session-Code"),
 		}
 		t.ExecuteTemplate(w, "sca-component", scaInfo)
 	}
@@ -94,8 +94,6 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.ExecuteTemplate(w, "report-table", report)
-
-	//fmt.Printf("financialTransactions: %s", string(financialTransactions))
 }
 
 // request to Airwallex
@@ -142,7 +140,7 @@ func authorize(codeChallange string) (AwxResponse, error) {
 	}{
 		codeChallange,
 		[]string{"w:awx_action:sca_edit", "r:awx_action:sca_view"},
-		"user_123",
+		"user_1234",
 	}
 
 	body, _ := json.Marshal(data)
@@ -153,6 +151,5 @@ func authorize(codeChallange string) (AwxResponse, error) {
 		fmt.Printf("connector: %v\n", err)
 	}
 
-	log.Println(awxRes.Header)
 	return awxRes, nil
 }

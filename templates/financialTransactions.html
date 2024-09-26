@@ -1,7 +1,9 @@
+
 {{ template "header" }}
 
     <body class="">
         {{ template "navbar" }}
+
         <div class="container-fluid">
             <h1>Financial Transactions</h1>
 
@@ -26,7 +28,7 @@
                         </form>
                     </div>
                 </div>
-                {{block "error-msg" .}}
+                {{block "error-msg" . }}
                 {{ if . }}
                     <div class="alert alert-danger" role="alert">
                         <span>{{ . }}</span>
