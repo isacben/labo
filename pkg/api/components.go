@@ -1,9 +1,10 @@
 package api
 
 import (
-//	"encoding/json"
+	"encoding/json"
+	"bytes"
 	"fmt"
-//	"log"
+	"log"
 	"net/http"
 	"os"
 	"text/template"
@@ -18,43 +19,78 @@ func BeneficiaryComponent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	codeVerifier, err := verifier()
+	if err != nil {
+		log.Println("error: authorize: could not calculate code verifier: ", err)
+	}
+
+	codeChallange := codeVerifier.CodeChallengeS256()
+	awxBenRes, err := authorize3(codeChallange)
+
+	if err != nil {
+		fmt.Printf("error: could not authorize: %s\n", err)
+	}
+
+	if awxBenRes.StatusCode != 200 {
+		log.Println("error: authorize: ", string(awxBenRes.Body))
+	}
+
+	awxAuthRes := struct {
+		AuthorizationCode string `json:"authorization_code"`
+	}{}
+
+	aerr := json.Unmarshal(awxBenRes.Body, &awxAuthRes)
+	if aerr != nil {
+		fmt.Printf("error: card details: %s\n", aerr)
+	}
+
+	c := Component {
+		codeVerifier.Value,
+		awxAuthRes.AuthorizationCode,
+		os.Getenv("clientId"),
+	}
+
 	data := struct {
 		Customer string
-		Report   Report
+		Component Component
 		Error    string
 	}{
 		Customer: os.Getenv("customer"),
+		Component: c,
 	}
 
 	t.Execute(w, data)
 }
 
-//func GetBeneficia(w http.ResponseWriter, r *http.Request) {
-//	from := r.FormValue("from_created_at")
-//	to := r.FormValue("to_created_at")
-//
-//	var report Report
-//
-//	awxRes, err := financialTransactions(from, to)
-//	if err != nil {
-//		fmt.Printf("error: could not get financial transactions: %s\n", err)
-//	}
-//
-//	t, _ := template.ParseFiles(
-//		"templates/header.html",
-//		"templates/financialTransactions.html",
-//	)
-//
-//	if awxRes.StatusCode != 200 {
-//		msg := fmt.Sprintf("Error: HTTP %v: %s", awxRes.StatusCode, string(awxRes.Body))
-//		log.Println(msg)
-//		t.ExecuteTemplate(w, "error-msg", msg)
-//	}
-//
-//	jerr := json.Unmarshal(awxRes.Body, &report)
-//	if jerr != nil {
-//		fmt.Printf("error: financial transactions: %s\n", jerr)
-//	}
-//
-//	t.ExecuteTemplate(w, "report-table", report)
-//}
+func authorize3 (codeChallange string) (AwxResponse, error) {
+	token, err := getToken()
+	if err != nil {
+		return AwxResponse{}, fmt.Errorf("authentication error: %s", err)
+	}
+
+	openId := os.Getenv("openId")
+	authHeader := fmt.Sprintf("Bearer %s", token)
+	header := http.Header{
+		"Authorization":  {authHeader},
+		"x-on-behalf-of": {openId},
+	}
+
+	data := struct {
+		CodeChallange string   `json:"code_challenge"`
+		Scope         []string `json:"scope"`
+	}{
+		codeChallange,
+		[]string{"w:awx_action:transfers_edit"},
+	}
+
+	body, _ := json.Marshal(data)
+
+	url := "/api/v1/authentication/authorize"
+	awxRes, err := sendRequest("POST", url, bytes.NewBuffer(body), header)
+	if err != nil {
+		fmt.Printf("connector: %v\n", err)
+	}
+
+	return awxRes, nil
+}

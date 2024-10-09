@@ -78,3 +78,9 @@ type Sca struct {
 	Email             string
 	SessionCode       string
 }
+
+type Component struct {
+	CodeVerifier      string
+	AuthorizationCode string
+	ClientId          string
+}
