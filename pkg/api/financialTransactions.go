@@ -18,7 +18,15 @@ func ViewFinancialTransactions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	t.Execute(w, nil)
+	data := struct {
+		Customer string
+		Report   Report
+		Error    string
+	}{
+		Customer: os.Getenv("customer"),
+	}
+
+	t.Execute(w, data)
 }
 
 func GetFinancialTransactions(w http.ResponseWriter, r *http.Request) {
@@ -49,8 +57,6 @@ func GetFinancialTransactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.ExecuteTemplate(w, "report-table", report)
-
-	//fmt.Printf("financialTransactions: %s", string(financialTransactions))
 }
 
 // request to Airwallex

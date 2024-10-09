@@ -10,42 +10,33 @@ import (
 	"text/template"
 )
 
-func ViewTransfers(w http.ResponseWriter, r *http.Request) {
+func ViewCard(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(
-		"templates/transfers.html",
+		"templates/cardDetails.html",
 		"templates/navbar.html",
 		"templates/header.html",
 	)
 	if err != nil {
 		fmt.Println(err)
 	}
-	data := struct {
-		Customer string
-		Report   Report
-		Error    string
-		ScaInfo  Sca
-	}{
-		Customer: os.Getenv("customer"),
-	}
-
-	t.Execute(w, data)
+	t.Execute(w, nil)
 }
 
-func GetTransfers(w http.ResponseWriter, r *http.Request) {
-	from := r.FormValue("from_created_at")
-	to := r.FormValue("to_created_at")
+func DisplayCard(w http.ResponseWriter, r *http.Request) {
+	cardId := "6a1b3d9e-4fb0-464e-bef8-32abb9bfb4c6"
 
-	var report Transfers
+	var panToken PanToken
 
-	log.Println("get transfers")
-	awxRes, err := transfers(from, to)
+	awxRes, err := getPanToken(cardId)
 	if err != nil {
-		fmt.Printf("error: could not get transfers: %s\n", err)
+		fmt.Printf("error: could not get pan token: %s\n", err)
 	}
+
+	fmt.Println(string(awxRes.Body))
 
 	t, _ := template.ParseFiles(
 		"templates/header.html",
-		"templates/transfers.html",
+		"templates/cardDetails.html",
 	)
 
 	if awxRes.StatusCode != 200 {
@@ -63,7 +54,7 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 		}
 
 		codeChallange := codeVerifier.CodeChallengeS256()
-		awxScaRes, err := authorize(codeChallange)
+		awxScaRes, err := authorize2(codeChallange)
 
 		if err != nil {
 			fmt.Printf("error: could not authorize: %s\n", err)
@@ -79,10 +70,16 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 
 		aerr := json.Unmarshal(awxScaRes.Body, &awxAuthRes)
 		if aerr != nil {
-			fmt.Printf("error: transfers: %s\n", aerr)
+			fmt.Printf("error: card details: %s\n", aerr)
 		}
 
-		scaInfo := Sca{
+		scaInfo := struct {
+			CodeVerifier      string
+			AuthorizationCode string
+			ClientId          string
+			Email             string
+			SessionCode       string
+		}{
 			codeVerifier.Value,
 			awxAuthRes.AuthorizationCode,
 			os.Getenv("clientId"),
@@ -92,17 +89,17 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 		t.ExecuteTemplate(w, "sca-component", scaInfo)
 	}
 
-	jerr := json.Unmarshal(awxRes.Body, &report)
+	jerr := json.Unmarshal(awxRes.Body, &panToken)
 	if jerr != nil {
-		fmt.Printf("error: transfers: %s\n", jerr)
+		fmt.Printf("error: card details: %s\n", jerr)
 	}
 
-	t.ExecuteTemplate(w, "report-table", report)
+	t.ExecuteTemplate(w, "pan-delegation", panToken)
 }
 
 // request to Airwallex
 
-func transfers(from string, to string) (AwxResponse, error) {
+func getPanToken(card_id string) (AwxResponse, error) {
 	token, err := getToken()
 	if err != nil {
 		return AwxResponse{}, fmt.Errorf("authentication error: %s", err)
@@ -115,8 +112,17 @@ func transfers(from string, to string) (AwxResponse, error) {
 		"x-on-behalf-of": {openId},
 	}
 
-	url := fmt.Sprintf("/api/v1/transfers?from_created_at=%s&to_created_at=%s", from, to)
-	awxRes, err := sendRequest("GET", url, nil, header)
+	log.Println(card_id)
+	data := struct {
+		CardId string `json:"card_id"`
+	}{
+		card_id,
+	}
+
+	body, _ := json.Marshal(data)
+	log.Println(string(body))
+	url := "/api/v1/issuing/pantokens/create"
+	awxRes, err := sendRequest("POST", url, bytes.NewBuffer(body), header)
 	if err != nil {
 		fmt.Printf("connector: %v\n", err)
 	}
@@ -124,7 +130,7 @@ func transfers(from string, to string) (AwxResponse, error) {
 	return awxRes, nil
 }
 
-func authorize(codeChallange string) (AwxResponse, error) {
+func authorize2(codeChallange string) (AwxResponse, error) {
 	token, err := getToken()
 	if err != nil {
 		return AwxResponse{}, fmt.Errorf("authentication error: %s", err)
@@ -144,7 +150,7 @@ func authorize(codeChallange string) (AwxResponse, error) {
 	}{
 		codeChallange,
 		[]string{"w:awx_action:sca_edit", "r:awx_action:sca_view"},
-		"user_12349",
+		"user_1234",
 	}
 
 	body, _ := json.Marshal(data)

@@ -1,15 +1,16 @@
+
 {{ template "header" }}
 
     <body class="">
 
-        {{ template "navbar" .Customer }}
+        {{ template "navbar" }}
         <div class="container-fluid">
             <h1>Transfers</h1>
 
             <div class="my-4">
                 <div class="card">
                     <div class="card-body">
-                        <form class="row g-3" hx-target="#response-table" hx-post="/getTransfers" hx-indicator="#spinner">
+                        <form class="row g-3" hx-target="#pan-delegation" hx-post="/displayCard" hx-indicator="#spinner">
                             <div class="col-md-2">
                                 <label class="form-label">
                                     From
@@ -30,8 +31,7 @@
                         </form>
                     </div>
                 </div>
-
-                {{block "error-msg" .Error}}
+                {{block "error-msg" .}}
                 {{ if . }}
                     <div class="alert alert-danger" role="alert">
                         <span>{{ . }}</span>
@@ -47,8 +47,8 @@
                     <div id="component"class="card-body"></div>
                 </div>
 
-                {{block "sca-component" .ScaInfo}}
-                {{ if .CodeVerifier }}
+                {{block "sca-component" .}}
+                {{ if . }}
 
                     <script>
                         // example: https://github.com/airwallex/airwallex-payment-demo/blob/master/integrations/cdn(components-sdk)/dropin.html
@@ -119,8 +119,8 @@
 
             </div>
             
-            <div id="response-table" class="table-responsive">
-                {{block "report-table" .Report}}
+            <div id="pan-delegation" class="table-responsive">
+                {{block "report-table" .}}
                     {{if .Items}}
                     <table class="table table-striped">
                         <thead> 

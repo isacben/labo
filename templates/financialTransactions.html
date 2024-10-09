@@ -2,8 +2,8 @@
 {{ template "header" }}
 
     <body class="">
-        {{ template "navbar" }}
 
+        {{ template "navbar" .Customer }}
         <div class="container-fluid">
             <h1>Financial Transactions</h1>
 
@@ -28,7 +28,8 @@
                         </form>
                     </div>
                 </div>
-                {{block "error-msg" . }}
+
+                {{block "error-msg" .Error }}
                 {{ if . }}
                     <div class="alert alert-danger" role="alert">
                         <span>{{ . }}</span>
@@ -38,28 +39,28 @@
             </div>
             
             <div id="response-table" class="table-responsive">
-                {{block "report-table" .}}
+                {{block "report-table" .Report}}
                     {{if .Items}}
                     <table class="table table-striped">
                         <thead> 
                             <tr>
-                                <th>id</td>
-                                <th>batch_id</td>
-                                <th>source_id</td>
-                                <th>funding_source_id</td>
-                                <th>source_type</td>
-                                <th>transaction_type</td>
-                                <th>currency</td>
-                                <th>amount</td>
-                                <th>client_rate</td>
-                                <th>currency_pair</td>
-                                <th>net</td>
-                                <th>fee</td>
-                                <th>estimated_settled_at</td>
-                                <th>settled_at</td>
-                                <th>description</td>
-                                <th>status</td>
-                                <th>created_at</td>
+                                <th>id</th>
+                                <th>batch_id</th>
+                                <th>source_id</th>
+                                <th>funding_source_id</th>
+                                <th>source_type</th>
+                                <th>transaction_type</th>
+                                <th>currency</th>
+                                <th>amount</th>
+                                <th>client_rate</th>
+                                <th>currency_pair</th>
+                                <th>net</th>
+                                <th>fee</th>
+                                <th>estimated_settled_at</th>
+                                <th>settled_at</th>
+                                <th>description</th>
+                                <th>status</th>
+                                <th>created_at</th>
                             </tr>
                         </thead>
                         <tbody>

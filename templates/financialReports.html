@@ -1,7 +1,7 @@
 {{ template "header" }}
 
     <body class="">
-        {{ template "navbar" }}
+        {{ template "navbar" .Customer }}
         <div class="container-fluid">
             <h1>Financial Reports</h1>
 
@@ -50,7 +50,7 @@
                         </tr>
                     </thead>
                     <tbody id="this-target">
-                        {{block "report-table" .}}
+                        {{block "report-table" .Report}}
                         {{ range .Items }} 
                         <tr class="text-nowrap" >
                             <td><a href="/downloadFinancialReport?id={{.Id}}&file_format={{.FileFormat}}&file_name={{.FileName}}">{{.Id}}</a></td>

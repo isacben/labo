@@ -28,7 +28,17 @@ func ViewFinancialReports(w http.ResponseWriter, r *http.Request) {
 		"templates/navbar.html",
 		"templates/header.html",
 	)
-	t.Execute(w, report)
+
+	data := struct {
+		Customer string
+		Report   FinancialReport
+		Error    string
+	}{
+		Customer: os.Getenv("customer"),
+		Report:   report,
+	}
+
+	t.Execute(w, data)
 }
 
 func DownloadFinancialReport(w http.ResponseWriter, r *http.Request) {

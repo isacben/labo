@@ -46,16 +46,21 @@ type FinancialReport struct {
 }
 
 type TransfersItems struct {
-	Id        string `json:"id"`
-	Amount    int    `json:"amount"`
-	Currency  string `json:"currency"`
-	Fee       int    `json:"fee"`
-	CreatedAt string `json:"created_at"`
+	Id        string  `json:"id"`
+	Amount    float64 `json:"amount"`
+	Currency  string  `json:"currency"`
+	Fee       float64 `json:"fee"`
+	CreatedAt string  `json:"created_at"`
 }
 
 type Transfers struct {
 	HasMore bool             `json:"has_more"`
 	Items   []TransfersItems `json:"items"`
+}
+
+type PanToken struct {
+	Expires_at string `json:"expires_at"`
+	Token      string `json:"token"`
 }
 
 // General
@@ -64,4 +69,12 @@ type AwxResponse struct {
 	Body       []byte
 	Header     http.Header
 	StatusCode int
+}
+
+type Sca struct {
+	CodeVerifier      string
+	AuthorizationCode string
+	ClientId          string
+	Email             string
+	SessionCode       string
 }
